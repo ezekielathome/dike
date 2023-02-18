@@ -1,0 +1,18 @@
+[project]
+name = "dike"
+version = "1.0.0"
+languages = ["CXX"]
+
+[fetch-content]
+eleos = { git = "https://github.com/ezekielathome/eleos", tag = "1.1.0" }
+
+[target.dike]
+type = "shared"
+sources = ["src/**.cpp"]
+include-directories = ["include"]
+compile-features = ["cxx_std_20"]
+link-libraries = ["eleos"]
+
+[[install]] # this is not final
+targets = ["dike"]
+destination = "bin"
