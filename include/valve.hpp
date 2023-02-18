@@ -1,13 +1,13 @@
 #pragma once
 
-#include <stddef.h>       // for size_t
-#include <stdint.h>       // for uint32_t, uint16_t, uint8_t
-#include <bit>            // for bit_cast
-#include <future>         // for promise, future, shared_future
-#include <string>         // for string
-#include <type_traits>    // for remove_reference<>::type
-#include <unordered_map>  // for unordered_map, _Map_base<>::mapped_type
-#include <utility>        // for move
+#include <bit>           // for bit_cast
+#include <future>        // for promise, future, shared_future
+#include <stddef.h>      // for size_t
+#include <stdint.h>      // for uint32_t, uint16_t, uint8_t
+#include <string>        // for string
+#include <type_traits>   // for remove_reference<>::type
+#include <unordered_map> // for unordered_map, _Map_base<>::mapped_type
+#include <utility>       // for move
 
 constexpr size_t CONVAR_TIMEOUT = 6;
 
@@ -68,9 +68,8 @@ namespace valve {
   private:
     auto internal_query( edict *player, const char *cvar ) -> int {
       // call vmt func #3
-      return std::bit_cast< int ( * )( void *, void *, const char * ) >(
-          ( *std::bit_cast< void *** >( instance ) )[ 2 ] )(
-          this, player, cvar );
+      return std::bit_cast< int ( * )( void *, void *, const char * ) >( (
+          *std::bit_cast< void *** >( instance ) )[ 2 ] )( this, player, cvar );
     }
 
     void *instance;
