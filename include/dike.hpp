@@ -75,6 +75,9 @@ public:
   }
 
 public:
-  static std::unordered_map< void *, player_context_t > cache;
+  static std::unordered_map< void *, player_context_t > store;
   valve::plugin_helpers *helpers;
 };
+
+// instantiate dike_plugin class
+dike_plugin plugin;

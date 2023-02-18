@@ -26,9 +26,9 @@ run_command_t original;
 
 void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   // ignore player commands if they haven't responded to our query
-  if ( !dike_plugin::cache.contains( self ) )
+  if ( !plugin.store.contains( self ) )
     return; // original( self, cmd, helper );
-  auto *ctx = &dike_plugin::cache[ self ];
+  auto *ctx = &plugin.store[ self ];
 
   // TODO: don't hardcode addresses, implement pattern scanning.
   static auto server =
@@ -191,7 +191,7 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
         ctx.scaling[ iter->second ] = std::stof( future.get( ) );
     }
 
-    dike_plugin::cache.insert_or_assign( edict->unknown, ctx );
+    plugin.store.insert_or_assign( edict->unknown, ctx );
   } ).detach( );
 
   // only hook once, this could be done better (for example, in load)
@@ -215,5 +215,3 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
     ran = true;
   }
 }
-
-const dike_plugin plugin;
