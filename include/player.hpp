@@ -1,8 +1,8 @@
 #pragma once
 
-#include <deque>          // for deque
-#include <unordered_map>  // for unordered_map
-#include "valve.hpp"      // for user_cmd
+#include "valve.hpp"     // for user_cmd
+#include <deque>         // for deque
+#include <unordered_map> // for unordered_map
 
 enum scaling_variable : int {
   sensitivity = 0,
