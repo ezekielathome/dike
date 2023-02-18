@@ -5,7 +5,7 @@ languages = ["CXX"]
 
 [fetch-content]
 eleos = { git = "https://github.com/ezekielathome/eleos", tag = "1.1.0" }
-apate = { git = "https://github.com/ezekielathome/apate", tag = "trunk" }
+apate = { git = "https://github.com/ezekielathome/apate", tag = "1.0.0" }
 
 [target.dike]
 type = "shared"
