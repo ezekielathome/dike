@@ -31,8 +31,6 @@ constexpr std::size_t OFFSET_FOV_ADJUST = 0x7C9540;
 constexpr std::size_t OFFSET_IS_SCOPED = 5800;
 // offset to m_bResumeZoom
 constexpr std::size_t OFFSET_RESUME_ZOOM = 5802;
-// offset to m_bResumeZoom
-constexpr std::size_t OFFSET_FOV_START = 875;
 
 enum scaling_variable : int {
   sensitivity = 0,
