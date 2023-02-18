@@ -8,7 +8,7 @@ eleos = { git = "https://github.com/ezekielathome/eleos", tag = "1.1.0" }
 
 [target.dike]
 type = "shared"
-sources = ["src/**.cpp"]
+sources = ["src/**.cpp", "include/**.hpp"]
 include-directories = ["include"]
 compile-features = ["cxx_std_20"]
 link-libraries = ["eleos"]

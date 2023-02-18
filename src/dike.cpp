@@ -5,6 +5,7 @@
 #include <chrono>         // for seconds
 #include <cmath>          // for fabsf, roundf
 #include <cstdint>        // for uintptr_t
+#include <deque>          // for _Deque_iterator, deque, operator==, _Deque...
 #include <dlfcn.h>        // for dlopen, RTLD_NOW
 #include <elf.h>          // for Elf32_Addr
 #include <future>         // for shared_future, future_status, future_statu...

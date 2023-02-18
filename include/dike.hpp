@@ -1,12 +1,10 @@
 #pragma once
 
-#include "eleos.hpp"     // for interface
-#include "valve.hpp"     // for user_cmd, create_interface, edict (ptr only)
-#include <cstddef>       // for size_t
-#include <deque>         // for _Deque_iterator, deque
-#include <map>           // for map
-#include <string>        // for allocator, string
-#include <unordered_map> // for unordered_map
+#include <cstddef>     // for size_t
+#include <string>      // for allocator, string
+#include "eleos.hpp"   // for interface
+#include "valve.hpp"   // for create_interface, edict (ptr only), cvar_status
+#include "player.hpp"  // for player_store_t
 
 #define DEBUG_DETECTIONS
 
@@ -32,26 +30,6 @@ constexpr std::size_t OFFSET_IS_SCOPED = 5800;
 // offset to m_bResumeZoom
 constexpr std::size_t OFFSET_RESUME_ZOOM = 5802;
 
-enum scaling_variable : int {
-  sensitivity = 0,
-  pitch,
-  yaw,
-  zoom_ratio,
-};
-
-struct snapshot_t {
-  valve::user_cmd cmd;
-  float fov;
-  bool zoomed;
-  bool resume_zoom;
-};
-
-struct player_context_t {
-  std::deque< snapshot_t > snapshots;
-  std::map< scaling_variable, float > scaling;
-  int last_violation;
-};
-
 class dike_plugin
     : public eleos::interface
     , valve::plugin_callbacks::v4 {
@@ -75,7 +53,7 @@ public:
   }
 
 public:
-  std::unordered_map< void *, player_context_t > store;
+  player_store_t store;
   valve::plugin_helpers *helpers;
 };
 

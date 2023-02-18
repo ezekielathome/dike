@@ -45,6 +45,9 @@ FetchContent_MakeAvailable(eleos)
 # Target: dike
 set(dike_SOURCES
 	"src/dike.cpp"
+	"include/dike.hpp"
+	"include/player.hpp"
+	"include/valve.hpp"
 	cmake.toml
 )
 
