@@ -1,5 +1,6 @@
 #include "dike.hpp"
 #include <algorithm>      // for clamp
+#include <apate.hpp>      // for declared
 #include <bit>            // for bit_cast
 #include <bits/std_abs.h> // for abs
 #include <chrono>         // for seconds
@@ -12,18 +13,15 @@
 #include <iterator>       // for end
 #include <link.h>         // for link_map
 #include <map>            // for map, operator==, _Rb_tree_iterator, _Rb_tr...
-#include <memory>         // for allocator_traits<>::value_type
-#include <stdio.h>        // for printf, perror
-#include <sys/mman.h>     // for mprotect, PROT_READ, PROT_WRITE
+#include <memory>         // for unique_ptr, make_unique, allocator_traits<...
+#include <stdio.h>        // for printf
 #include <thread>         // for thread
 #include <type_traits>    // for remove_reference<>::type
-#include <unistd.h>       // for sysconf, _SC_PAGE_SIZE
 #include <unordered_map>  // for unordered_map, _Node_iterator, operator==
 #include <utility>        // for move, pair, tuple_element<>::type
 #include <vector>         // for vector
 
-using run_command_t = void ( * )( void *, void *, void * );
-run_command_t original;
+std::unique_ptr< apate::declared > run_command;
 
 void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   // ignore player commands if they haven't responded to our query
@@ -146,7 +144,8 @@ final:
     cmd->buttons &= ~button_flags::IN_ATTACK;
 
   // call original run_command to let server handle the command.
-  original( self, cmd, helper );
+  run_command->get_original< void ( * )( void *, void *, void * ) >( )(
+      self, cmd, helper );
 }
 
 auto dike_plugin::load(
@@ -199,20 +198,12 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
   // but this is the easiest way of getting the vmt pointer
   static bool ran = false;
   if ( !ran ) {
-    auto method =
-        std::bit_cast< uintptr_t >( &( ( *std::bit_cast< uintptr_t ** >(
-            edict->unknown ) )[ RUNCOMMAND_INDEX ] ) );
+    auto method = std::bit_cast< void * >( &( ( *std::bit_cast< uintptr_t ** >(
+        edict->unknown ) )[ RUNCOMMAND_INDEX ] ) );
 
-    auto *page =
-        std::bit_cast< void * >( method & ~( sysconf( _SC_PAGE_SIZE ) - 1 ) );
-    if ( mprotect( page, 4, PROT_READ | PROT_WRITE ) == 0 ) {
-      original = *std::bit_cast< run_command_t * >( method );
-      *std::bit_cast< void ** >( method ) =
-          std::bit_cast< run_command_t * >( &hooked_run_command );
-      mprotect( page, 4, PROT_READ );
-    } else {
-      perror( "dike: unable to perform run_command hook" );
-    }
+    run_command = std::make_unique< apate::declared >( method );
+    run_command->hook( &hooked_run_command );
+
     ran = true;
   }
 }

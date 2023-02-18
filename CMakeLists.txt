@@ -28,7 +28,7 @@ project(dike
 	LANGUAGES
 		CXX
 	VERSION
-		1.0.0
+		0.1.0
 )
 
 include(FetchContent)
@@ -41,6 +41,15 @@ FetchContent_Declare(eleos
 		1.1.0
 )
 FetchContent_MakeAvailable(eleos)
+
+message(STATUS "Fetching apate (trunk)...")
+FetchContent_Declare(apate
+	GIT_REPOSITORY
+		"https://github.com/ezekielathome/apate"
+	GIT_TAG
+		trunk
+)
+FetchContent_MakeAvailable(apate)
 
 # Target: dike
 set(dike_SOURCES
@@ -66,6 +75,7 @@ target_include_directories(dike PUBLIC
 
 target_link_libraries(dike PUBLIC
 	eleos
+	apate
 )
 
 install(

@@ -1,17 +1,18 @@
 [project]
 name = "dike"
-version = "1.0.0"
+version = "0.1.0"
 languages = ["CXX"]
 
 [fetch-content]
 eleos = { git = "https://github.com/ezekielathome/eleos", tag = "1.1.0" }
+apate = { git = "https://github.com/ezekielathome/apate", tag = "trunk" }
 
 [target.dike]
 type = "shared"
 sources = ["src/**.cpp", "include/**.hpp"]
 include-directories = ["include"]
 compile-features = ["cxx_std_20"]
-link-libraries = ["eleos"]
+link-libraries = ["eleos", "apate"]
 
 [[install]] # this is not final
 targets = ["dike"]
