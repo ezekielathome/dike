@@ -33,7 +33,8 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   auto *ctx = &cache[ self ];
 
   // TODO: don't hardcode addresses, implement pattern scanning.
-  static auto server = ( link_map * ) dlopen( "csgo/bin/server.so", RTLD_NOW );
+  static auto server =
+      std::bit_cast< link_map * >( dlopen( "csgo/bin/server.so", RTLD_NOW ) );
   static auto get_fov =
       std::bit_cast< int ( * )( void * ) >( server->l_addr + OFFSET_GET_FOV );
   static auto get_default_fov = std::bit_cast< int ( * )( void * ) >(
