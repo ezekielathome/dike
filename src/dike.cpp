@@ -61,19 +61,19 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
        ( cmd->buttons & button_flags::IN_ATTACK ) && zoomed || resume_zoom )
     goto final;
 
-  for ( int i = 0; i < entry->snapshots.size( ); i++ ) {
-    if ( entry->snapshots[ i ].cmd.buttons & button_flags::IN_ATTACK2 )
+  for ( const auto snapshot : entry->snapshots ) {
+    if ( snapshot.cmd.buttons & button_flags::IN_ATTACK2 )
       goto final;
-    if ( entry->snapshots[ i ].fov != fov )
+    if ( snapshot.fov != fov )
       goto final;
   }
 
   // check for both yaw and pitch
-  for ( int i = 0; i <= 1; i++ ) {
+  for ( size_t idx = 0; idx <= 1; idx++ ) {
     // get m_yaw (1) / m_pitch (2)
-    const auto scaling = static_cast< scaling_variable >( i + 1 );
+    const auto scaling = static_cast< scaling_variable >( idx + 1 );
     float mouse_delta =
-        ( cmd->view[ i ] - entry->snapshots.front( ).cmd.view[ i ] ) /
+        ( cmd->view[ idx ] - entry->snapshots.front( ).cmd.view[ idx ] ) /
         entry->scaling[ scaling ];
 
     // yaw is negated ( angles[yaw] -= yaw * mx )
