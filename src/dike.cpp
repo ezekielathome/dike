@@ -196,7 +196,7 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
   } ).detach( );
 
   // only hook once, this could be done better (for example, in load)
-  // but this is the easiest way of getting the vtable
+  // but this is the easiest way of getting the vmt pointer
   static bool ran = false;
   if ( !ran ) {
     auto method =
@@ -211,7 +211,7 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
           std::bit_cast< PlayerRunCommand_t * >( &hooked_run_command );
       mprotect( page, 4, PROT_READ );
     } else {
-      perror( "dike: unable to perform vmt hook" );
+      perror( "dike: unable to perform run_command hook" );
     }
     ran = true;
   }
