@@ -29,7 +29,7 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   // ignore player commands if they haven't responded to our query
   if ( !plugin.store.contains( self ) )
     return; // original( self, cmd, helper );
-  auto *ctx = &plugin.store[ self ];
+  auto *entry = &plugin.store[ self ];
 
   // TODO: don't hardcode addresses, implement pattern scanning.
   static auto server =
@@ -53,7 +53,7 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   const auto zoomed = ( fov != default_fov );
 
   // apply zoom sensitivity ratio to adjustment
-  distance_adjustment *= ctx->scaling[ scaling_variable::zoom_ratio ];
+  distance_adjustment *= entry->scaling[ scaling_variable::zoom_ratio ];
 
   // process snapshots to check if sensitivity might be variable during current
   // cmd.
@@ -61,10 +61,10 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
        ( cmd->buttons & button_flags::IN_ATTACK ) && zoomed || resume_zoom )
     goto final;
 
-  for ( int i = 0; i < ctx->snapshots.size( ); i++ ) {
-    if ( ctx->snapshots[ i ].cmd.buttons & button_flags::IN_ATTACK2 )
+  for ( int i = 0; i < entry->snapshots.size( ); i++ ) {
+    if ( entry->snapshots[ i ].cmd.buttons & button_flags::IN_ATTACK2 )
       goto final;
-    if ( ctx->snapshots[ i ].fov != fov )
+    if ( entry->snapshots[ i ].fov != fov )
       goto final;
   }
 
@@ -73,15 +73,15 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
     // get m_yaw (1) / m_pitch (2)
     const auto scaling = static_cast< scaling_variable >( i + 1 );
     float mouse_delta =
-        ( cmd->view[ i ] - ctx->snapshots.front( ).cmd.view[ i ] ) /
-        ctx->scaling[ scaling ];
+        ( cmd->view[ i ] - entry->snapshots.front( ).cmd.view[ i ] ) /
+        entry->scaling[ scaling ];
 
     // yaw is negated ( angles[yaw] -= yaw * mx )
     if ( scaling == scaling_variable::yaw )
       mouse_delta = -mouse_delta;
 
     // apply sensitivity and distance adjustment to delta
-    mouse_delta /= ctx->scaling[ scaling_variable::sensitivity ];
+    mouse_delta /= entry->scaling[ scaling_variable::sensitivity ];
     if ( zoomed )
       mouse_delta /= distance_adjustment;
 
@@ -95,7 +95,7 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
             self,
             deviation * 100,
             DEVIATION_THRESHOLD * 100 );
-        ctx->last_violation = cmd->number;
+        entry->last_violation = cmd->number;
 #ifdef DEBUG_DETECTIONS
         printf( "  DEBUG:\n" );
         printf( "    delta: %f\n", mouse_delta );
@@ -106,7 +106,7 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
         printf( "    zoomed: %i\n", ( fov != default_fov ) );
         printf( "    adjustment: %f\n", distance_adjustment );
         printf( "    number: %d\n", cmd->number );
-        for ( size_t idx = 0; auto const &snapshot : ctx->snapshots ) {
+        for ( size_t idx = 0; auto const &snapshot : entry->snapshots ) {
           printf( "  snapshot(%d)\n", idx++ );
 
           printf( "    cmd #%d\n", snapshot.cmd.number );
@@ -134,15 +134,15 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   }
 
 final:
-  if ( ctx->snapshots.size( ) >= 4 )
-    ctx->snapshots.pop_back( );
-  ctx->snapshots.emplace_front( snapshot_t {
+  if ( entry->snapshots.size( ) >= 4 )
+    entry->snapshots.pop_back( );
+  entry->snapshots.emplace_front( snapshot_t {
       .cmd = *cmd, .fov = fov, .zoomed = zoomed, .resume_zoom = resume_zoom } );
 
   // "punishment" system
   // this sets unsets the IN_ATTACK flag, leading to the player being unable to
   // attack.
-  if ( cmd->number < ctx->last_violation + 16 )
+  if ( cmd->number < entry->last_violation + 16 )
     cmd->buttons &= ~button_flags::IN_ATTACK;
 
   // call original run_command to let server handle the command.
@@ -173,7 +173,7 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
     futures.insert_or_assign( convar, std::move( future ) );
   }
 
-  player_context_t ctx = { };
+  player_entry_t entry = { };
   std::thread( [ = ]( ) mutable {
     for ( auto [ convar, future ] : futures ) {
       static std::map< std::string, scaling_variable > lookup = {
@@ -189,10 +189,10 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
                 // being ignored...
       auto iter = lookup.find( convar );
       if ( iter != std::end( lookup ) )
-        ctx.scaling[ iter->second ] = std::stof( future.get( ) );
+        entry.scaling[ iter->second ] = std::stof( future.get( ) );
     }
 
-    plugin.store.insert_or_assign( edict->unknown, ctx );
+    plugin.store.insert_or_assign( edict->unknown, entry );
   } ).detach( );
 
   // only hook once, this could be done better (for example, in load)

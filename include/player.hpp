@@ -18,10 +18,10 @@ struct snapshot_t {
   bool resume_zoom;
 };
 
-struct player_context_t {
+struct player_entry_t {
   std::deque< snapshot_t > snapshots;
   std::unordered_map< scaling_variable, float > scaling;
   int last_violation;
 };
 
-using player_store_t = std::unordered_map< void *, player_context_t >;
+using player_store_t = std::unordered_map< void *, player_entry_t >;
