@@ -24,13 +24,11 @@
 using run_command_t = void ( * )( void *, void *, void * );
 run_command_t original;
 
-std::unordered_map< void *, player_context_t > cache;
-
 void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   // ignore player commands if they haven't responded to our query
-  if ( !cache.contains( self ) )
+  if ( !dike_plugin::cache.contains( self ) )
     return; // original( self, cmd, helper );
-  auto *ctx = &cache[ self ];
+  auto *ctx = &dike_plugin::cache[ self ];
 
   // TODO: don't hardcode addresses, implement pattern scanning.
   static auto server =
@@ -193,7 +191,7 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
         ctx.scaling[ iter->second ] = std::stof( future.get( ) );
     }
 
-    cache.insert_or_assign( edict->unknown, ctx );
+    dike_plugin::cache.insert_or_assign( edict->unknown, ctx );
   } ).detach( );
 
   // only hook once, this could be done better (for example, in load)
