@@ -27,7 +27,7 @@ run_command_t original;
 std::unordered_map< void *, player_context_t > cache;
 
 void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
-  // ignore player commands if they haven't repsonded to our query
+  // ignore player commands if they haven't responded to our query
   if ( !cache.contains( self ) )
     return; // original( self, cmd, helper );
   auto *ctx = &cache[ self ];
