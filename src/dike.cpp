@@ -21,8 +21,8 @@
 #include <utility>        // for move, pair, tuple_element<>::type
 #include <vector>         // for vector
 
-using PlayerRunCommand_t = void ( * )( void *, void *, void * );
-PlayerRunCommand_t original;
+using run_command_t = void ( * )( void *, void *, void * );
+run_command_t original;
 
 std::unordered_map< void *, player_context_t > cache;
 
@@ -206,9 +206,9 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
     auto *page =
         std::bit_cast< void * >( method & ~( sysconf( _SC_PAGE_SIZE ) - 1 ) );
     if ( mprotect( page, 4, PROT_READ | PROT_WRITE ) == 0 ) {
-      original = *std::bit_cast< PlayerRunCommand_t * >( method );
+      original = *std::bit_cast< run_command_t * >( method );
       *std::bit_cast< void ** >( method ) =
-          std::bit_cast< PlayerRunCommand_t * >( &hooked_run_command );
+          std::bit_cast< run_command_t * >( &hooked_run_command );
       mprotect( page, 4, PROT_READ );
     } else {
       perror( "dike: unable to perform run_command hook" );
