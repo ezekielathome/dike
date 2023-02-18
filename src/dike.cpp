@@ -1,33 +1,32 @@
 #include "dike.hpp"
-#include <bits/std_abs.h>  // for abs
-#include <dlfcn.h>         // for dlopen, RTLD_NOW
-#include <elf.h>           // for Elf32_Addr
-#include <link.h>          // for link_map
-#include <stdio.h>         // for printf, perror
-#include <sys/mman.h>      // for mprotect, PROT_READ, PROT_WRITE
-#include <unistd.h>        // for sysconf, _SC_PAGE_SIZE
-#include <algorithm>       // for clamp
-#include <bit>             // for bit_cast
-#include <chrono>          // for seconds
-#include <cmath>           // for fabsf, roundf
-#include <cstdint>         // for uintptr_t
-#include <future>          // for shared_future, future_status, future_statu...
-#include <iterator>        // for end
-#include <map>             // for map, operator==, _Rb_tree_iterator, _Rb_tr...
-#include <memory>          // for allocator_traits<>::value_type
-#include <thread>          // for thread
-#include <type_traits>     // for remove_reference<>::type
-#include <unordered_map>   // for unordered_map, _Node_iterator, operator==
-#include <utility>         // for move, pair, tuple_element<>::type
-#include <vector>          // for vector
+#include <algorithm>      // for clamp
+#include <bit>            // for bit_cast
+#include <bits/std_abs.h> // for abs
+#include <chrono>         // for seconds
+#include <cmath>          // for fabsf, roundf
+#include <cstdint>        // for uintptr_t
+#include <dlfcn.h>        // for dlopen, RTLD_NOW
+#include <elf.h>          // for Elf32_Addr
+#include <future>         // for shared_future, future_status, future_statu...
+#include <iterator>       // for end
+#include <link.h>         // for link_map
+#include <map>            // for map, operator==, _Rb_tree_iterator, _Rb_tr...
+#include <memory>         // for allocator_traits<>::value_type
+#include <stdio.h>        // for printf, perror
+#include <sys/mman.h>     // for mprotect, PROT_READ, PROT_WRITE
+#include <thread>         // for thread
+#include <type_traits>    // for remove_reference<>::type
+#include <unistd.h>       // for sysconf, _SC_PAGE_SIZE
+#include <unordered_map>  // for unordered_map, _Node_iterator, operator==
+#include <utility>        // for move, pair, tuple_element<>::type
+#include <vector>         // for vector
 
 using PlayerRunCommand_t = void ( * )( void *, void *, void * );
 PlayerRunCommand_t original;
 
 std::unordered_map< void *, player_context_t > cache;
 
-void __attribute__( ( cdecl ) )
-hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
+void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   // ignore player commands if they haven't repsonded to our query
   if ( !cache.contains( self ) )
     return; // original( self, cmd, helper );
@@ -35,13 +34,12 @@ hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
 
   // TODO: don't hardcode addresses, implement pattern scanning.
   static auto server = ( link_map * ) dlopen( "csgo/bin/server.so", RTLD_NOW );
-  static auto get_fov = std::bit_cast< int ( * )( void * ) >(
-      server->l_addr + OFFSET_GET_FOV );
+  static auto get_fov =
+      std::bit_cast< int ( * )( void * ) >( server->l_addr + OFFSET_GET_FOV );
   static auto get_default_fov = std::bit_cast< int ( * )( void * ) >(
       server->l_addr + OFFSET_GET_DEFAULT_FOV );
-  static auto get_distance_adjustment =
-	  std::bit_cast< float ( * )( void * ) >(
-          server->l_addr + OFFSET_FOV_ADJUST );
+  static auto get_distance_adjustment = std::bit_cast< float ( * )( void * ) >(
+      server->l_addr + OFFSET_FOV_ADJUST );
 
   const auto scoped = *std::bit_cast< bool * >(
       std::bit_cast< uintptr_t >( self ) + OFFSET_IS_SCOPED );
@@ -202,7 +200,7 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
   static bool ran = false;
   if ( !ran ) {
     auto method =
-		std::bit_cast< uintptr_t >( &( ( *std::bit_cast< uintptr_t ** >(
+        std::bit_cast< uintptr_t >( &( ( *std::bit_cast< uintptr_t ** >(
             edict->unknown ) )[ RUNCOMMAND_INDEX ] ) );
 
     auto *page =
