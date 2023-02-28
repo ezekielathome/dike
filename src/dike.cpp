@@ -32,17 +32,26 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   // TODO: don't hardcode addresses, implement pattern scanning.
   static auto server =
       std::bit_cast< link_map * >( dlopen( "csgo/bin/server.so", RTLD_NOW ) );
-  static auto get_fov =
-      std::bit_cast< int ( * )( void * ) >( server->l_addr + OFFSET_GET_FOV );
+
+  static auto get_fov = std::bit_cast< int ( * )( void * ) >(
+      server->l_addr +
+      toml::find< uintptr_t >( plugin.config.section, "get_fov" ) );
   static auto get_default_fov = std::bit_cast< int ( * )( void * ) >(
-      server->l_addr + OFFSET_GET_DEFAULT_FOV );
+      server->l_addr +
+      toml::find< uintptr_t >( plugin.config.section, "get_default_fov" ) );
   static auto get_distance_adjustment = std::bit_cast< float ( * )( void * ) >(
-      server->l_addr + OFFSET_FOV_ADJUST );
+      server->l_addr +
+      toml::find< uintptr_t >( plugin.config.section, "get_adjustment" ) );
+
+  static auto is_scoped =
+      toml::find< uintptr_t >( plugin.config.section, "is_scoped" );
+  static auto resume_zoom =
+      toml::find< uintptr_t >( plugin.config.section, "resume_zoom" );
 
   const auto scoped = *std::bit_cast< bool * >(
-      std::bit_cast< uintptr_t >( self ) + OFFSET_IS_SCOPED );
-  const auto resume_zoom = *std::bit_cast< bool * >(
-      std::bit_cast< uintptr_t >( self ) + OFFSET_RESUME_ZOOM );
+      std::bit_cast< uintptr_t >( self ) + is_scoped );
+  const auto is_resuming_zoom = *std::bit_cast< bool * >(
+      std::bit_cast< uintptr_t >( self ) + resume_zoom );
 
   const auto fov = static_cast< float >( get_fov( self ) );
   const auto default_fov = static_cast< float >( get_default_fov( self ) );
@@ -56,7 +65,8 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
   // process snapshots to check if sensitivity might be variable during current
   // cmd.
   if ( ( cmd->buttons & button_flags::IN_ATTACK2 ) ||
-       ( cmd->buttons & button_flags::IN_ATTACK ) && zoomed || resume_zoom )
+       ( cmd->buttons & button_flags::IN_ATTACK ) && zoomed ||
+       is_resuming_zoom )
     goto final;
 
   for ( const auto snapshot : entry->snapshots ) {
@@ -134,8 +144,11 @@ void hooked_run_command( void *self, valve::user_cmd *cmd, void *helper ) {
 final:
   if ( entry->snapshots.size( ) >= 4 )
     entry->snapshots.pop_back( );
-  entry->snapshots.emplace_front( snapshot_t {
-      .cmd = *cmd, .fov = fov, .zoomed = zoomed, .resume_zoom = resume_zoom } );
+  entry->snapshots.emplace_front(
+      snapshot_t { .cmd = *cmd,
+                   .fov = fov,
+                   .zoomed = zoomed,
+                   .resume_zoom = is_resuming_zoom } );
 
   // "punishment" system
   // this sets unsets the IN_ATTACK flag, leading to the player being unable to
@@ -149,12 +162,29 @@ final:
 }
 
 auto dike_plugin::load(
-    valve::create_interface factory, valve::create_interface /*unused*/ )
+    valve::create_interface factory, valve::create_interface server_factory )
     -> bool {
   helpers = new valve::plugin_helpers { std::bit_cast< void * >(
       factory( "ISERVERPLUGINHELPERS001", nullptr ) ) };
+  auto server = std::bit_cast< valve::server_game * >(
+      server_factory( "ServerGameDLL005", nullptr ) );
 
-  return true;
+  config.data = toml::parse( "csgo/addons/dike/config.toml" );
+  if ( server ) {
+    auto sections = toml::find( config.data, "section" );
+    auto descriptor = server->get_game_descriptor( );
+    if ( descriptor ) {
+      config.section = toml::find( sections, descriptor );
+      printf( "dike: found section for descriptor `%s`\n", descriptor );
+      return true;
+    } else {
+      printf( "dike: failed to get game descriptor\n" );
+    }
+  } else {
+    printf( "dike: failed to get server factory `ServerGameDLL005`" );
+  }
+
+  return false;
 };
 
 auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
@@ -198,8 +228,9 @@ auto dike_plugin::client_loaded( valve::edict *edict ) -> void {
   // but this is the easiest way of getting the vmt pointer
   static bool ran = false;
   if ( !ran ) {
-    auto method = std::bit_cast< void * >( &( ( *std::bit_cast< uintptr_t ** >(
-        edict->unknown ) )[ RUNCOMMAND_INDEX ] ) );
+    auto method = std::bit_cast< void * >(
+        &( ( *std::bit_cast< uintptr_t ** >( edict->unknown ) )
+               [ toml::find< size_t >( config.section, "run_command" ) ] ) );
 
     run_command = std::make_unique< apate::declared >( method );
     run_command->hook( &hooked_run_command );

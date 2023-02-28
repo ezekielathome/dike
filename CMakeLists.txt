@@ -51,6 +51,15 @@ FetchContent_Declare(apate
 )
 FetchContent_MakeAvailable(apate)
 
+message(STATUS "Fetching toml11 (v3.7.1)...")
+FetchContent_Declare(toml11
+	GIT_REPOSITORY
+		"https://github.com/ToruNiina/toml11"
+	GIT_TAG
+		v3.7.1
+)
+FetchContent_MakeAvailable(toml11)
+
 # Target: dike
 set(dike_SOURCES
 	"src/dike.cpp"
@@ -69,6 +78,10 @@ target_compile_features(dike PUBLIC
 	cxx_std_20
 )
 
+target_compile_options(dike PUBLIC
+	-m32
+)
+
 target_include_directories(dike PUBLIC
 	include
 )
@@ -76,6 +89,11 @@ target_include_directories(dike PUBLIC
 target_link_libraries(dike PUBLIC
 	eleos
 	apate
+	toml11
+)
+
+target_link_options(dike PUBLIC
+	-m32
 )
 
 install(

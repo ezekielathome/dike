@@ -1,0 +1,25 @@
+[general]
+method = "deviation" # must refer to a method.<name> table
+
+[method.deviation]
+threshold = 0.25
+lower_bound = 0.000001
+upper_bound = 128.0
+
+# signatures and offsets for games
+
+[section."Counter-Strike: Global Offensive"]
+run_command = 479
+get_fov = 0x7c9290
+get_default_fov = 0x61b330
+get_adjustment = 0x7c9530
+is_scoped = 5800
+resume_zoom = 5802
+
+[section."Team Fortress 2"]
+run_command = "e9 ?? ?? ?? ??"
+get_fov = "e9 ?? ?? ?? ??"
+get_default_fov = "e9 ?? ?? ?? ??"
+get_adjustment = "e9 ?? ?? ?? ??"
+is_scoped = "e9 ?? ?? ?? ??"
+resume_zoom = "e9 ?? ?? ?? ??"

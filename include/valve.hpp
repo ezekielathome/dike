@@ -76,6 +76,33 @@ namespace valve {
     std::unordered_map< int, std::promise< std::string > > promises;
   };
 
+  class server_game {
+  public:
+    virtual auto
+    dll_init( void *engine, void *physics, void *filesystem, void *globals )
+        -> bool;
+    virtual auto game_init( ) -> bool;
+    virtual auto level_init(
+        const char *map,
+        const char *map_entities,
+        const char *old_level,
+        const char *landmark,
+        bool load,
+        bool background ) -> bool;
+    virtual auto
+    serevr_activate( void *edict_list, int edict_count, int max_clients )
+        -> void;
+    virtual auto game_frame( bool simulating ) -> void;
+    virtual auto pre_client_update( bool simulating ) -> void;
+    virtual auto level_shutdown( ) -> void;
+    virtual auto game_shutdown( ) -> void;
+    virtual auto dll_shutdown( ) -> void;
+
+    virtual auto get_tick_interval( ) -> float;
+    virtual auto get_server_classes( ) -> void *;
+    virtual auto get_game_descriptor( ) -> const char *;
+  };
+
   namespace plugin_callbacks {
     class v4 {
     public:

@@ -2,63 +2,49 @@ name: CI
 
 on: [push, pull_request]
 
-
 jobs:
   build:
-    name: ${{ matrix.os }}-${{ matrix.arch }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        #os: [ubuntu-latest, windows-latest]
-        os: [ubuntu-latest]
-        arch: [x64, x86]
-    env:
-      BUILD_TYPE: Release
+    name: ubuntu-latest-x86
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'recursive'
-    - name: Install multilib
-      run: sudo apt install gcc-multilib g++-multilib
-    - name: Build
-      run: |
-        cmake -B build \
-          -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-          -D CMAKE_UNITY_BUILD=ON \
-          -D CMAKE_TOOLCHAIN_FILE=cmake/${{ matrix.os }}_${{ matrix.arch }}.cmake
-        cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
-        cmake --install build --prefix ./install --config ${{ env.BUILD_TYPE }}
-  
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ matrix.os }}.${{ matrix.arch }}
-        path: install/bin/*
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - name: Install multilib
+        run: sudo apt install gcc-multilib g++-multilib
+      - name: Build
+        run: |
+          cmake -B build
+          cmake --build build --parallel
+          cmake --install build --prefix ./install
 
-    - name: Get lowercase OS name
-      id: osname
-      uses: ASzc/change-string-case-action@v5
-      with:
-        string: ${{ runner.os }}
+      - name: Get lowercase OS name
+        id: osname
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ runner.os }}
 
-    - name: Move misc files
-      run: |
-        cp dike_${{ matrix.arch }}.vdf install/bin/
-        mv install/bin/libdike.so install/bin/dike.${{ matrix.arch }}.so
+      - name: Move binaries
+        run: |
+          cp install/bin/libdike.so addons/dike/binary.so
+          
+      - name: Compress
+        uses: vimtor/action-zip@v1
+        with:
+          files: addons/
+          dest: dike.zip
 
-    - name: Compress
-      uses: vimtor/action-zip@v1
-      with:
-        files: install/bin/
-        dest: ${{ matrix.os }}.${{ matrix.arch }}.zip
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dike.zip
+          path: dike.zip
 
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      if: ${{ startsWith(github.ref, 'refs/tags/') }}
-      with:
-        prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') || contains(github.ref, '-pre') }}
-        files: ${{ matrix.os }}.${{ matrix.arch }}.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        with:
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') || contains(github.ref, '-pre') }}
+          files: dike.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -5,6 +5,8 @@
 #include "valve.hpp"  // for create_interface, edict (ptr only), cvar_status
 #include <cstddef>    // for size_t
 #include <string>     // for allocator, string
+#include <toml.hpp>
+
 
 #define DEBUG_DETECTIONS
 
@@ -129,6 +131,11 @@ public:
   }
 
 public:
+  struct {
+    toml::value data;
+    toml::value section;
+  } config;
+
   player_store_t store;
   valve::plugin_helpers *helpers;
 };

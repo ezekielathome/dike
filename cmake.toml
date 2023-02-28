@@ -6,14 +6,17 @@ languages = ["CXX"]
 [fetch-content]
 eleos = { git = "https://github.com/ezekielathome/eleos", tag = "1.1.0" }
 apate = { git = "https://github.com/ezekielathome/apate", tag = "1.0.0" }
+toml11 = { git = "https://github.com/ToruNiina/toml11", tag = "v3.7.1" }
 
 [target.dike]
 type = "shared"
 sources = ["src/**.cpp", "include/**.hpp"]
+compile-options = ["-m32"]
+link-options = ["-m32"]
 include-directories = ["include"]
 compile-features = ["cxx_std_20"]
-link-libraries = ["eleos", "apate"]
+link-libraries = ["eleos", "apate", "toml11"]
 
-[[install]] # this is not final
+[[install]]
 targets = ["dike"]
 destination = "bin"
