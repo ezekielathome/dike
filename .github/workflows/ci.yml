@@ -32,7 +32,7 @@ jobs:
       - name: Compress
         uses: vimtor/action-zip@v1
         with:
-          files: plugin/addons/
+          files: plugin/
           dest: dike.zip
 
       - name: Upload artifacts
