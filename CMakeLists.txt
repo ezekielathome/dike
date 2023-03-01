@@ -28,7 +28,7 @@ project(dike
 	LANGUAGES
 		CXX
 	VERSION
-		0.1.0
+		0.2.0
 )
 
 include(FetchContent)
