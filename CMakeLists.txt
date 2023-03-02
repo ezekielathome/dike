@@ -33,12 +33,12 @@ project(dike
 
 include(FetchContent)
 
-message(STATUS "Fetching eleos (1.1.0)...")
+message(STATUS "Fetching eleos (v1.0.0)...")
 FetchContent_Declare(eleos
 	GIT_REPOSITORY
 		"https://github.com/ezekielathome/eleos"
 	GIT_TAG
-		1.1.0
+		v1.0.0
 )
 FetchContent_MakeAvailable(eleos)
 
