@@ -42,12 +42,12 @@ FetchContent_Declare(eleos
 )
 FetchContent_MakeAvailable(eleos)
 
-message(STATUS "Fetching apate (1.0.0)...")
+message(STATUS "Fetching apate (v1.0.0)...")
 FetchContent_Declare(apate
 	GIT_REPOSITORY
 		"https://github.com/ezekielathome/apate"
 	GIT_TAG
-		1.0.0
+		v1.0.0
 )
 FetchContent_MakeAvailable(apate)
 
